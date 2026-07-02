@@ -1,0 +1,162 @@
+// English and Hindi translation dictionary for RAMU BHAI gaming platform
+
+export type Language = 'Hindi' | 'English';
+
+export const translations = {
+  Hindi: {
+    // Brand & General
+    brandName: '🎭╰‿╯RAMUㅤᏴᎻᎪᏆ',
+    tagline: 'भारत का नंबर 1 ऑनलाइन गेमिंग प्लेटफॉर्म!',
+    subtitle: 'रजिस्टर करें, मित्रों को आमंत्रित करें, और कलर प्रेडिक्शन, एविएटर और माइंस गेम खेलकर असीमित पुरस्कार जीतें।',
+    exitGame: '← वापस डैशबोर्ड / Exit Game',
+    exitAdmin: 'एडमिन बंद करें',
+    balance: 'कुल शेष राशि',
+    recharge: 'रिचार्ज / Deposit',
+    withdraw: 'निकासी / Withdraw',
+    profile: 'मेरा / Profile',
+    promotion: 'प्रमोशन / Share',
+    wallet: 'वॉलेट / Wallet',
+    home: 'होम / Home',
+    testingTips: '⚡ क्विक टेस्टिंग टिप्स (Testing Guide):',
+    referralId: 'आमंत्रण कोड / Referral ID',
+    ownerMode: 'रामू भाई - ओनर मोड (Owner Mode)',
+    openAdmin: 'एडमिन पैनल खोलें',
+    logout: 'लॉगआउट करें / Sign Out',
+
+    // Game Selector
+    gamesSelectorTitle: 'ऑनलाइन गेम्स / Live Games Selector',
+    wingoTitle: 'Win Go कलर प्रेडिक्शन',
+    wingoDesc: 'रंग या नंबर का अनुमान लगाएं और 9 गुना तक लाभ कमाएं।',
+    aviatorTitle: 'एविएटर जेट / Aviator Flight',
+    aviatorDesc: 'प्लेन के उड़ने से पहले कैश आउट करें। 100 गुना तक बोनस!',
+    minesTitle: 'माइंस स्वीपर / Mines Multiplier',
+    minesDesc: 'बमों से बचें और चमकते हुए हीरे खोजें। जोखिम बढ़ाएं, लाभ उठाएं।',
+
+    // Login & Register
+    login: 'लॉगइन (Login)',
+    register: 'रजिस्टर (Register)',
+    mobileNumber: 'मोबाइल नंबर / Mobile Number',
+    enter10Digit: '10-अंकीय मोबाइल नंबर दर्ज करें',
+    password: 'पासवर्ड / Password',
+    enterPassword: 'अपना पासवर्ड दर्ज करें',
+    invitationCode: 'आमंत्रण कोड / Invitation Code',
+    loginBtn: 'लॉगिन करें / Login',
+    registerBtn: 'खाता बनाएं / Register',
+    alreadyRegistered: 'पहले से पंजीकृत हैं? लॉगिन करें',
+    needAccount: 'खाता नहीं है? रजिस्टर करें',
+    uidPrefix: 'यूआईडी (UID):',
+
+    // Wallet Section
+    walletDetails: 'वॉलेट विवरण / Wallet Account',
+    availableBalance: 'उपलब्ध शेष राशि',
+    withdrawFormTitle: 'विड्रॉल अनुरोध फॉर्म / Withdraw Money',
+    withdrawAmount: 'निकासी राशि (न्यूनतम ₹110)',
+    withdrawUpi: 'भुगतान UPI ID (उदा: shyamu@fam)',
+    submitWithdraw: 'निकासी सबमिट करें / Request Withdraw',
+    txHistory: 'लेन-देन इतिहास / Transaction History',
+    recentDeposits: 'हाल के रिचार्ज / Deposits',
+    recentWithdrawals: 'हालिया निकासी / Withdrawals',
+    statusApproved: 'सफल',
+    statusRejected: 'अस्वीकृत',
+    statusPending: 'लंबित',
+
+    // Game messages & commission
+    serviceFeeLabel: '2% सेवा शुल्क काटा जाएगा।',
+    netBetLabel: 'शुद्ध दांव',
+    placedBet: 'दांव पंजीकृत है',
+    placeBetBtn: 'दांव लगाएं',
+    waitingNextRound: 'अगली उड़ान की प्रतीक्षा करें...',
+    flewAway: 'FLEW AWAY! (उड़ गया)',
+    cashedOut: 'राशि निकाली गई',
+    multiplierTape: 'गुणांक रिकॉर्ड',
+    minesCountLabel: 'बमों की संख्या',
+    minesStartBtn: 'गेम शुरू करें',
+    minesCashoutBtn: 'कैश आउट करें',
+    minesGemsFound: 'हीरे मिले',
+
+    // Gift Codes
+    giftCodeTitle: '🎁 गिफ्ट कोड रिडेम्पशन / Gift Code',
+    giftCodePlaceholder: 'गिफ्ट कोड दर्ज करें (उदा: RAMUBHAI)',
+    giftCodeBtn: 'दावा करें / Redeem',
+    giftCodeSuccess: 'बधाई हो! गिफ्ट कोड सफलतापूर्वक भुनाया गया।',
+    giftCodeError: 'अमान्य या पहले से उपयोग किया गया कोड।',
+  },
+  English: {
+    // Brand & General
+    brandName: '🎭╰‿╯RAMU BHAI',
+    tagline: 'Indias No. 1 Online Gaming Platform!',
+    subtitle: 'Register, invite friends, and play Color Prediction, Aviator, and Mines to win unlimited real cash.',
+    exitGame: '← Back to Dashboard',
+    exitAdmin: 'Exit Admin',
+    balance: 'Total Wallet Balance',
+    recharge: 'Deposit Cash',
+    withdraw: 'Withdraw Cash',
+    profile: 'My Profile',
+    promotion: 'Referral Program',
+    wallet: 'My Wallet',
+    home: 'Home Dashboard',
+    testingTips: '⚡ Quick Testing Tips:',
+    referralId: 'Referral / Invite ID',
+    ownerMode: 'RAMU BHAI - Owner Mode',
+    openAdmin: 'Open Admin Panel',
+    logout: 'Logout Account',
+
+    // Game Selector
+    gamesSelectorTitle: 'Live Premium Games Selector',
+    wingoTitle: 'Win Go Color Prediction',
+    wingoDesc: 'Predict colors or numbers to earn up to 9x returns.',
+    aviatorTitle: 'Aviator Jet Crash Game',
+    aviatorDesc: 'Cash out before the plane flies away. Up to 100x rewards!',
+    minesTitle: 'Mines Sweeper Multiplier',
+    minesDesc: 'Avoid the hidden bombs and click the sparkling gems.',
+
+    // Login & Register
+    login: 'Account Login',
+    register: 'Account Registration',
+    mobileNumber: 'Mobile Phone Number',
+    enter10Digit: 'Enter 10-digit phone number',
+    password: 'Secure Password',
+    enterPassword: 'Enter login password',
+    invitationCode: 'Referral Invite Code',
+    loginBtn: 'Login to Account',
+    registerBtn: 'Register New Account',
+    alreadyRegistered: 'Have an account? Login here',
+    needAccount: 'Need an account? Register here',
+    uidPrefix: 'UID:',
+
+    // Wallet Section
+    walletDetails: 'Wallet Balance Details',
+    availableBalance: 'Available Balance',
+    withdrawFormTitle: 'Request Withdrawal Form',
+    withdrawAmount: 'Withdrawal Amount (Min ₹110)',
+    withdrawUpi: 'UPI Payment ID (e.g., shyamu@fam)',
+    submitWithdraw: 'Request Withdrawal',
+    txHistory: 'Transaction History Logs',
+    recentDeposits: 'Recent Deposits',
+    recentWithdrawals: 'Recent Withdrawals',
+    statusApproved: 'Success',
+    statusRejected: 'Rejected',
+    statusPending: 'Pending',
+
+    // Game messages & commission
+    serviceFeeLabel: '2% platform fee will be deducted on placement.',
+    netBetLabel: 'Net Wager',
+    placedBet: 'Bet Registered',
+    placeBetBtn: 'Place Bet',
+    waitingNextRound: 'Waiting for next round...',
+    flewAway: 'FLEW AWAY!',
+    cashedOut: 'Cashed Out Successfully',
+    multiplierTape: 'Multiplier Record',
+    minesCountLabel: 'Number of Bombs',
+    minesStartBtn: 'Start New Session',
+    minesCashoutBtn: 'Cash Out Now',
+    minesGemsFound: 'Gems Found',
+
+    // Gift Codes
+    giftCodeTitle: '🎁 Redeem Reward / Gift Code',
+    giftCodePlaceholder: 'Enter Gift Coupon Code (e.g. RAMUBHAI)',
+    giftCodeBtn: 'Claim Reward',
+    giftCodeSuccess: 'Congratulations! Reward claimed successfully.',
+    giftCodeError: 'Invalid, expired, or already claimed code.',
+  }
+};

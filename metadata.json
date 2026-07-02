@@ -1,0 +1,6 @@
+{
+  "name": "Ramu Bhai Games",
+  "description": "A premium color prediction, Win Go, and Bingo gaming platform under the brand of Ramu Bhai, with interactive gameplay, payment gateways, and admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

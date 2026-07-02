@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cinzel Decorative", serif;
+  --font-gaming: "Rajdhani", sans-serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1224;
+}
+::-webkit-scrollbar-thumb {
+  background: #313d6b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4e5e9e;
+}
+
+/* Custom Animations */
+@keyframes pulse-gold {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.6), 0 0 20px rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.9), 0 0 30px rgba(251, 191, 36, 0.6);
+  }
+}
+
+.glowing-brand {
+  font-family: var(--font-display);
+  animation: pulse-gold 3s infinite;
+}
+
+.gaming-number {
+  font-family: var(--font-gaming);
+}
+
