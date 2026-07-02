@@ -92,232 +92,59 @@ export default function WinGoGame({
     return { issueNumber, secondsLeft };
   };
 
-  // Initialize issue numbers and mock history on load
-  useEffect(() => {
-    const details30s = getPeriodDetails('30s');
-    const details1M = getPeriodDetails('1Min');
-    const details3M = getPeriodDetails('3Min');
-    const details5M = getPeriodDetails('5Min');
-
-    setIssue30s(details30s.issueNumber);
-    setIssue1M(details1M.issueNumber);
-    setIssue3M(details3M.issueNumber);
-    setIssue5M(details5M.issueNumber);
-
-    lastResolved30s.current = details30s.issueNumber;
-    lastResolved1M.current = details1M.issueNumber;
-    lastResolved3M.current = details3M.issueNumber;
-    lastResolved5M.current = details5M.issueNumber;
-
-    // Create realistic mock histories
-    const generateHistory = (period: WinGoPeriod, count: number): WinGoHistoryItem[] => {
-      const items: WinGoHistoryItem[] = [];
-      const { issueNumber } = getPeriodDetails(period);
-      const todayStr = issueNumber.slice(0, 8);
-      const baseNum = parseInt(issueNumber.slice(8), 10);
-
-      for (let i = 1; i <= count; i++) {
-        const slotNum = Math.max(1, baseNum - i);
-        const num = Math.floor(Math.random() * 10);
-        const size = num >= 5 ? 'Big' : 'Small';
-        let color: WinGoHistoryItem['color'] = 'Red';
-        if (num === 0) color = 'Red+Violet';
-        else if (num === 5) color = 'Green+Violet';
-        else if ([1, 3, 7, 9].includes(num)) color = 'Green';
-        else color = 'Red';
-
-        items.push({
-          issueNumber: todayStr + String(slotNum).padStart(4, '0'),
-          number: num,
-          size,
-          color,
-          timestamp: Date.now() - i * 60000,
-        });
-      }
-      return items;
-    };
-
-    setHistory30s(generateHistory('30s', 15));
-    setHistory1M(generateHistory('1Min', 15));
-    setHistory3M(generateHistory('3Min', 15));
-    setHistory5M(generateHistory('5Min', 15));
-  }, []);
-
-  // Timers countdown effect synchronized to real world clock
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const details30s = getPeriodDetails('30s');
-      const details1M = getPeriodDetails('1Min');
-      const details3M = getPeriodDetails('3Min');
-      const details5M = getPeriodDetails('5Min');
-
-      setTimeLeft30s(details30s.secondsLeft);
-      setTimeLeft1M(details1M.secondsLeft);
-      setTimeLeft3M(details3M.secondsLeft);
-      setTimeLeft5M(details5M.secondsLeft);
-
-      // 30s transitions
-      if (lastResolved30s.current && lastResolved30s.current !== details30s.issueNumber) {
-        const prevIssue = lastResolved30s.current;
-        lastResolved30s.current = details30s.issueNumber;
-        setIssue30s(details30s.issueNumber);
-        triggerResult('30s', prevIssue);
-      } else if (!lastResolved30s.current) {
-        lastResolved30s.current = details30s.issueNumber;
-        setIssue30s(details30s.issueNumber);
-      }
-
-      // 1Min transitions
-      if (lastResolved1M.current && lastResolved1M.current !== details1M.issueNumber) {
-        const prevIssue = lastResolved1M.current;
-        lastResolved1M.current = details1M.issueNumber;
-        setIssue1M(details1M.issueNumber);
-        triggerResult('1Min', prevIssue);
-      } else if (!lastResolved1M.current) {
-        lastResolved1M.current = details1M.issueNumber;
-        setIssue1M(details1M.issueNumber);
-      }
-
-      // 3Min transitions
-      if (lastResolved3M.current && lastResolved3M.current !== details3M.issueNumber) {
-        const prevIssue = lastResolved3M.current;
-        lastResolved3M.current = details3M.issueNumber;
-        setIssue3M(details3M.issueNumber);
-        triggerResult('3Min', prevIssue);
-      } else if (!lastResolved3M.current) {
-        lastResolved3M.current = details3M.issueNumber;
-        setIssue3M(details3M.issueNumber);
-      }
-
-      // 5Min transitions
-      if (lastResolved5M.current && lastResolved5M.current !== details5M.issueNumber) {
-        const prevIssue = lastResolved5M.current;
-        lastResolved5M.current = details5M.issueNumber;
-        setIssue5M(details5M.issueNumber);
-        triggerResult('5Min', prevIssue);
-      } else if (!lastResolved5M.current) {
-        lastResolved5M.current = details5M.issueNumber;
-        setIssue5M(details5M.issueNumber);
-      }
-
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [allBets, userBalance]);
-
-  // Handle game results when timer hits 0
-  const triggerResult = (period: WinGoPeriod, currentIssue: string) => {
-    // House Risk/Loss Control Algorithm (लॉस पीरियड नंबर पर मारेगा)
-    // Find active pending bets for this period & issue
-    const activeBets = allBets.filter(
-      (b) => b.period === period && b.issueNumber === currentIssue && b.status === 'Pending'
-    );
-
-    let selectedNum = Math.floor(Math.random() * 10);
-
-    if (activeBets.length > 0) {
-      // Evaluate all possible numbers 0-9 for total payout.
-      // We choose the number that generates the lowest total payout for players (making them lose).
-      const candidates = Array.from({ length: 10 }).map((_, candNum) => {
-        const candSize = candNum >= 5 ? 'Big' : 'Small';
-        let candColor: WinGoHistoryItem['color'] = 'Red';
-        if (candNum === 0) candColor = 'Red+Violet';
-        else if (candNum === 5) candColor = 'Green+Violet';
-        else if ([1, 3, 7, 9].includes(candNum)) candColor = 'Green';
-        else candColor = 'Red';
-
-        let payout = 0;
-        activeBets.forEach((bet) => {
-          let isWon = false;
-          let mult = 2;
-
-          if (bet.betOn === 'Big' && candSize === 'Big') isWon = true;
-          if (bet.betOn === 'Small' && candSize === 'Small') isWon = true;
-
-          if (bet.betOn === 'Green') {
-            if (candColor === 'Green') { isWon = true; mult = 2; }
-            else if (candColor === 'Green+Violet') { isWon = true; mult = 1.5; }
+  // Load and sync WinGo state from Express server
+  const fetchAndSyncHistory = async (period: WinGoPeriod) => {
+    try {
+      const res = await fetch(`/api/wingo/history?period=${period}`);
+      if (!res.ok) throw new Error('API failure');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.history)) {
+        if (period === '30s') {
+          setHistory30s(data.history);
+          setIssue30s(data.currentIssue);
+          setTimeLeft30s(data.secondsLeft);
+          if (lastResolved30s.current && lastResolved30s.current !== data.currentIssue) {
+            triggerResultDirectly('30s', lastResolved30s.current, data.history);
           }
-          if (bet.betOn === 'Red') {
-            if (candColor === 'Red') { isWon = true; mult = 2; }
-            else if (candColor === 'Red+Violet') { isWon = true; mult = 1.5; }
+          lastResolved30s.current = data.currentIssue;
+        } else if (period === '1Min') {
+          setHistory1M(data.history);
+          setIssue1M(data.currentIssue);
+          setTimeLeft1M(data.secondsLeft);
+          if (lastResolved1M.current && lastResolved1M.current !== data.currentIssue) {
+            triggerResultDirectly('1Min', lastResolved1M.current, data.history);
           }
-          if (bet.betOn === 'Violet' && candColor.includes('Violet')) { isWon = true; mult = 4.5; }
-          if (!isNaN(Number(bet.betOn)) && Number(bet.betOn) === candNum) { isWon = true; mult = 9; }
-
-          if (isWon) {
-            payout += bet.amount * 0.98 * mult;
+          lastResolved1M.current = data.currentIssue;
+        } else if (period === '3Min') {
+          setHistory3M(data.history);
+          setIssue3M(data.currentIssue);
+          setTimeLeft3M(data.secondsLeft);
+          if (lastResolved3M.current && lastResolved3M.current !== data.currentIssue) {
+            triggerResultDirectly('3Min', lastResolved3M.current, data.history);
           }
-        });
-
-        return { num: candNum, payout };
-      });
-
-      // Sort ascending by payout to minimize house loss
-      candidates.sort((a, b) => a.payout - b.payout);
-      selectedNum = candidates[0].num;
-    }
-
-    // ADMIN BINGO OVERRIDE GATEWAY (रामू भाई ओनर परिणाम नियंत्रण)
-    const storedOverride = localStorage.getItem(`ramu_wingo_override_${period}`);
-    if (storedOverride) {
-      // Clear override immediately so it only applies once!
-      localStorage.removeItem(`ramu_wingo_override_${period}`);
-
-      if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(storedOverride)) {
-        selectedNum = parseInt(storedOverride, 10);
-      } else if (storedOverride === 'Big') {
-        const bigNums = [5, 6, 7, 8, 9];
-        selectedNum = bigNums[Math.floor(Math.random() * bigNums.length)];
-      } else if (storedOverride === 'Small') {
-        const smallNums = [0, 1, 2, 3, 4];
-        selectedNum = smallNums[Math.floor(Math.random() * smallNums.length)];
-      } else if (storedOverride === 'Red') {
-        const redNums = [2, 4, 6, 8];
-        selectedNum = redNums[Math.floor(Math.random() * redNums.length)];
-      } else if (storedOverride === 'Green') {
-        const greenNums = [1, 3, 7, 9];
-        selectedNum = greenNums[Math.floor(Math.random() * greenNums.length)];
-      } else if (storedOverride === 'Violet') {
-        const violetNums = [0, 5];
-        selectedNum = violetNums[Math.floor(Math.random() * violetNums.length)];
+          lastResolved3M.current = data.currentIssue;
+        } else if (period === '5Min') {
+          setHistory5M(data.history);
+          setIssue5M(data.currentIssue);
+          setTimeLeft5M(data.secondsLeft);
+          if (lastResolved5M.current && lastResolved5M.current !== data.currentIssue) {
+            triggerResultDirectly('5Min', lastResolved5M.current, data.history);
+          }
+          lastResolved5M.current = data.currentIssue;
+        }
       }
+    } catch (e) {
+      console.error('Error syncing WinGo history:', e);
     }
+  };
 
-    const size = selectedNum >= 5 ? 'Big' : 'Small';
-    let color: WinGoHistoryItem['color'] = 'Red';
-    if (selectedNum === 0) color = 'Red+Violet';
-    else if (selectedNum === 5) color = 'Green+Violet';
-    else if ([1, 3, 7, 9].includes(selectedNum)) color = 'Green';
-    else color = 'Red';
+  const triggerResultDirectly = (period: WinGoPeriod, currentIssue: string, historyList: WinGoHistoryItem[]) => {
+    const resolvedItem = historyList.find(item => item.issueNumber === currentIssue);
+    if (!resolvedItem) return;
 
-    let setHistory: React.Dispatch<React.SetStateAction<WinGoHistoryItem[]>> = () => {};
-
-    if (period === '30s') {
-      setHistory = setHistory30s;
-    } else if (period === '1Min') {
-      setHistory = setHistory1M;
-    } else if (period === '3Min') {
-      setHistory = setHistory3M;
-    } else {
-      setHistory = setHistory5M;
-    }
-
-    // Add result to period history
-    const newHistoryItem: WinGoHistoryItem = {
-      issueNumber: currentIssue,
-      number: selectedNum,
-      size,
-      color,
-      timestamp: Date.now(),
-    };
-
-    setHistory((prev) => {
-      if (prev.some((item) => item.issueNumber === currentIssue)) {
-        return prev;
-      }
-      return [newHistoryItem, ...prev.slice(0, 29)];
-    });
+    const selectedNum = resolvedItem.number;
+    const size = resolvedItem.size;
+    const color = resolvedItem.color;
 
     // Check bets and calculate wins
     onSetAllBets((prevBets) => {
@@ -388,6 +215,60 @@ export default function WinGoGame({
       return updated;
     });
   };
+
+  // Synchronized countdown and polling effect
+  useEffect(() => {
+    fetchAndSyncHistory('30s');
+    fetchAndSyncHistory('1Min');
+    fetchAndSyncHistory('3Min');
+    fetchAndSyncHistory('5Min');
+
+    const interval = setInterval(() => {
+      setTimeLeft30s((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => fetchAndSyncHistory('30s'), 500);
+          return 30;
+        }
+        return prev - 1;
+      });
+
+      setTimeLeft1M((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => fetchAndSyncHistory('1Min'), 500);
+          return 60;
+        }
+        return prev - 1;
+      });
+
+      setTimeLeft3M((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => fetchAndSyncHistory('3Min'), 500);
+          return 180;
+        }
+        return prev - 1;
+      });
+
+      setTimeLeft5M((prev) => {
+        if (prev <= 1) {
+          setTimeout(() => fetchAndSyncHistory('5Min'), 500);
+          return 300;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const syncInterval = setInterval(() => {
+      fetchAndSyncHistory('30s');
+      fetchAndSyncHistory('1Min');
+      fetchAndSyncHistory('3Min');
+      fetchAndSyncHistory('5Min');
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(syncInterval);
+    };
+  }, [allBets, userBalance]);
 
   // Get active configurations
   const activeTimeLeft = activeTab === '30s' ? timeLeft30s : activeTab === '1Min' ? timeLeft1M : activeTab === '3Min' ? timeLeft3M : timeLeft5M;

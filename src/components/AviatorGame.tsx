@@ -129,28 +129,6 @@ export default function AviatorGame({
     }
   }, [gameState]);
 
-  // Preparation Phase Timer
-  useEffect(() => {
-    if (gameState === 'Prep') {
-      setMultiplier(1.0);
-      setHasCashedOut(false);
-      
-      countdownRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(countdownRef.current!);
-            startFlight();
-            return 5;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, [gameState]);
-
   // Save bet helper
   const recordAndSaveBet = (bet: {
     amount: number;
@@ -171,109 +149,84 @@ export default function AviatorGame({
     setMyBets(updatedList);
   };
 
-  // Start Flight
-  const startFlight = () => {
-    // Determine crash point with risk control based on bet amount
-    const rand = Math.random();
-    let cp = 1.01;
+  const lastRoundIdRef = useRef<number>(-1);
+  const lastStateRef = useRef<'Prep' | 'Flying' | 'Crashed' | null>(null);
 
-    // We can check local hasBet state
-    if (hasBetRef.current) {
-      if (betAmountRef.current >= 500) {
-        // High wager risk: crash early between 1.1x and 1.8x
-        cp = 1.1 + Math.random() * 0.7;
-      } else if (betAmountRef.current >= 200) {
-        // Medium wager risk: crash between 1.2x and 2.8x
-        cp = 1.2 + Math.random() * 1.6;
-      } else {
-        // Small wager: flies high! Minimum up to 20x to 100x
-        if (rand < 0.25) {
-          cp = 1.2 + Math.random() * 3.8; // low multiplier sometimes
-        } else {
-          cp = 20.0 + Math.random() * 80.0; // flies up to 20x-100x!
-        }
-      }
-    } else {
-      // No active bet: can go very high to tempt them
-      if (rand < 0.2) {
-        cp = 1.1 + Math.random() * 3.9;
-      } else {
-        cp = 20.0 + Math.random() * 80.0; // flies up to 20x-100x!
-      }
-    }
+  // Poll server for authoritative Aviator game state
+  useEffect(() => {
+    const fetchState = async () => {
+      try {
+        const res = await fetch('/api/aviator/state');
+        if (!res.ok) throw new Error('API failure');
+        const data = await res.json();
 
-    // OPERATOR OVERRIDE FOR AVIATOR (रामू भाई ओनर परिणाम नियंत्रण)
-    const storedOverride = localStorage.getItem('ramu_aviator_override');
-    if (storedOverride) {
-      localStorage.removeItem('ramu_aviator_override');
-      const parsedOverride = parseFloat(storedOverride);
-      if (!isNaN(parsedOverride) && parsedOverride >= 1.01) {
-        cp = parsedOverride;
-      }
-    }
-
-    const finalCp = Number(cp.toFixed(2));
-    setCrashPoint(finalCp);
-    currentCrashPointRef.current = finalCp;
-    setGameState('Flying');
-
-    // Update live players to Flying state
-    setLiveBets(prev => prev.map(p => ({ ...p, status: 'Flying' })));
-
-    const tickRate = 80; // refresh rate in ms
-    let currentMultiplier = 1.0;
-
-    intervalRef.current = setInterval(() => {
-      // Accelerates dynamically as it climbs higher
-      currentMultiplier += 0.03 + (currentMultiplier * 0.005);
-      const currentMultFixed = Number(currentMultiplier.toFixed(2));
-      setMultiplier(currentMultFixed);
-
-      // Randomly cash out other online players in real-time
-      setLiveBets(prev => prev.map(p => {
-        if (p.status === 'Flying' && Math.random() < 0.03 + (currentMultFixed * 0.002)) {
-          return {
-            ...p,
-            status: 'CashedOut',
-            cashoutMultiplier: currentMultFixed
-          };
-        }
-        return p;
-      }));
-
-      // Check for Crash
-      if (currentMultiplier >= finalCp) {
-        clearInterval(intervalRef.current!);
-        setGameState('Crashed');
-
-        // Check if user has lost bet (they had active bet and did not cashout)
-        if (hasBetRef.current && !hasCashedOutRef.current) {
-          recordAndSaveBet({
-            amount: betAmountRef.current,
-            crashPoint: finalCp,
-            status: 'Lost'
-          });
+        // 1. Detect new round
+        if (lastRoundIdRef.current !== data.roundId) {
+          lastRoundIdRef.current = data.roundId;
+          setHasCashedOut(false);
+          setHasBet(false);
         }
 
-        // Set remaining live players as flew away
-        setLiveBets(prev => prev.map(p => {
-          if (p.status === 'Flying') {
-            return { ...p, status: 'FlewAway' };
+        // 2. Detect transition inside round
+        if (lastStateRef.current !== data.state) {
+          lastStateRef.current = data.state;
+
+          if (data.state === 'Crashed') {
+            // User loses if they have not cashed out
+            if (hasBetRef.current && !hasCashedOutRef.current) {
+              recordAndSaveBet({
+                amount: betAmountRef.current,
+                crashPoint: data.crashPoint,
+                status: 'Lost'
+              });
+            }
           }
-          return p;
-        }));
+        }
 
-        setHasBet(false);
+        setGameState(data.state);
+        setCrashPoint(data.crashPoint);
+        currentCrashPointRef.current = data.crashPoint;
+        setRecentCrashes(data.recentCrashes);
 
-        // Record recent crash history line
-        setRecentCrashes((prev) => [finalCp, ...prev.slice(0, 7)]);
-        
-        setTimeout(() => {
-          setGameState('Prep');
-        }, 3000);
+        if (data.state === 'Prep') {
+          setCountdown(data.countdown);
+          setMultiplier(1.0);
+        } else if (data.state === 'Crashed') {
+          setCountdown(data.countdown);
+          setMultiplier(data.crashPoint);
+        } else if (data.state === 'Flying') {
+          // Keep synced with the server's current multiplier
+          setMultiplier(data.multiplier);
+        }
+      } catch (err) {
+        console.error('Error fetching Aviator state:', err);
       }
+    };
+
+    fetchState();
+    const interval = setInterval(fetchState, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Smooth local multiplier interpolation during flight phase
+  useEffect(() => {
+    if (gameState !== 'Flying') return;
+
+    const tickRate = 100; // 10 ticks per second
+    const interval = setInterval(() => {
+      setMultiplier((prev) => {
+        if (prev >= crashPoint) {
+          return crashPoint;
+        }
+        // Increment smoothly cap at crashPoint
+        const next = Number((prev + 0.02 + (prev * 0.005)).toFixed(2));
+        return next >= crashPoint ? crashPoint : next;
+      });
     }, tickRate);
-  };
+
+    return () => clearInterval(interval);
+  }, [gameState, crashPoint]);
 
   const handlePlaceBet = () => {
     if (!isAllowedToPlay) {
