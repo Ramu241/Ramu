@@ -155,12 +155,21 @@ export default function App() {
   const [passcodeError, setPasscodeError] = useState<string>('');
 
   // Authentication forms
-  const [authMode, setAuthMode] = useState<'Login' | 'Register'>('Login');
+  const [authMode, setAuthMode] = useState<'Login' | 'Register' | 'Forgot'>('Login');
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [mobileInput, setMobileInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [inviteCodeInput, setInviteCodeInput] = useState<string>('7777777');
   const [authError, setAuthError] = useState<string>('');
+
+  // Forgot password inputs
+  const [forgotMobile, setForgotMobile] = useState<string>('');
+  const [forgotOtp, setForgotOtp] = useState<string>('');
+  const [sentOtp, setSentOtp] = useState<string>('');
+  const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [forgotError, setForgotError] = useState<string>('');
+  const [forgotSuccess, setForgotSuccess] = useState<string>('');
 
   // Withdrawal form inputs
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
@@ -660,7 +669,7 @@ export default function App() {
           {/* Tab buttons */}
           <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80">
             <button
-              onClick={() => { setAuthMode('Login'); setAuthError(''); }}
+              onClick={() => { setAuthMode('Login'); setAuthError(''); setOtpSent(false); }}
               className={`py-2 text-center rounded-lg font-bold text-sm tracking-wide transition-all ${
                 authMode === 'Login'
                   ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold shadow'
@@ -670,7 +679,7 @@ export default function App() {
               {t.login}
             </button>
             <button
-              onClick={() => { setAuthMode('Register'); setAuthError(''); }}
+              onClick={() => { setAuthMode('Register'); setAuthError(''); setOtpSent(false); }}
               className={`py-2 text-center rounded-lg font-bold text-sm tracking-wide transition-all ${
                 authMode === 'Register'
                   ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold shadow'
@@ -681,88 +690,267 @@ export default function App() {
             </button>
           </div>
 
-          <form onSubmit={authMode === 'Login' ? handleLogin : handleRegister} className="space-y-4">
-            {/* Display Name / Name Input (REGISTER MODE ONLY) */}
-            {authMode === 'Register' && (
-              <div className="space-y-1 animate-fade-in">
-                <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                  <UserIcon size={13} /> Display Name / पूरा नाम
-                </label>
-                <input
-                  type="text"
-                  placeholder={language === 'Hindi' ? 'अपना नाम दर्ज करें' : 'Enter your name'}
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold text-sm"
-                  required
-                />
-              </div>
-            )}
+          {authMode !== 'Forgot' ? (
+            <form onSubmit={authMode === 'Login' ? handleLogin : handleRegister} className="space-y-4">
+              {/* Display Name / Name Input (REGISTER MODE ONLY) */}
+              {authMode === 'Register' && (
+                <div className="space-y-1 animate-fade-in">
+                  <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                    <UserIcon size={13} /> Display Name / पूरा नाम
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={language === 'Hindi' ? 'अपना नाम दर्ज करें' : 'Enter your name'}
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold text-sm"
+                    required
+                  />
+                </div>
+              )}
 
-            {/* Phone Input */}
-            <div className="space-y-1">
-              <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                <Smartphone size={13} /> {t.mobileNumber}
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-semibold">+91</span>
-                <input
-                  type="text"
-                  placeholder={t.enter10Digit}
-                  value={mobileInput}
-                  onChange={(e) => setMobileInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono tracking-wide"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="space-y-1">
-              <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                <Lock size={13} /> {t.password}
-              </label>
-              <input
-                type="password"
-                placeholder={t.enterPassword}
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-              />
-            </div>
-
-            {/* Register: invite code */}
-            {authMode === 'Register' && (
+              {/* Phone Input */}
               <div className="space-y-1">
                 <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                  <Gift size={13} /> {t.invitationCode}
+                  <Smartphone size={13} /> {t.mobileNumber}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-semibold">+91</span>
+                  <input
+                    type="text"
+                    placeholder={t.enter10Digit}
+                    value={mobileInput}
+                    onChange={(e) => setMobileInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono tracking-wide"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-1">
+                <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                  <Lock size={13} /> {t.password}
                 </label>
                 <input
-                  type="text"
-                  placeholder="145768738434"
-                  value={inviteCodeInput}
-                  onChange={(e) => setInviteCodeInput(e.target.value.replace(/[^0-9]/g, ''))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-amber-400 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  type="password"
+                  placeholder={t.enterPassword}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   required
                 />
               </div>
-            )}
 
-            {authError && (
-              <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-lg text-xs text-red-400 text-center font-semibold animate-shake">
-                {authError}
-              </div>
-            )}
+              {/* Forgot Password Link inside Login form */}
+              {authMode === 'Login' && (
+                <div className="flex justify-end pr-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('Forgot');
+                      setAuthError('');
+                      setForgotError('');
+                      setForgotSuccess('');
+                      setOtpSent(false);
+                      setForgotMobile('');
+                      setForgotOtp('');
+                      setSentOtp('');
+                      setNewPassword('');
+                    }}
+                    className="text-xs text-amber-500 hover:text-amber-400 font-bold underline"
+                  >
+                    {language === 'Hindi' ? 'पासवर्ड भूल गए? / Forgot Password?' : 'Forgot Password?'}
+                  </button>
+                </div>
+              )}
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              {authMode === 'Login' ? t.loginBtn : t.registerBtn}
-              <ArrowRight size={16} />
-            </button>
-          </form>
+              {/* Register: invite code */}
+              {authMode === 'Register' && (
+                <div className="space-y-1">
+                  <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                    <Gift size={13} /> {t.invitationCode}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="145768738434"
+                    value={inviteCodeInput}
+                    onChange={(e) => setInviteCodeInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-amber-400 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    required
+                  />
+                </div>
+              )}
+
+              {authError && (
+                <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-lg text-xs text-red-400 text-center font-semibold animate-shake">
+                  {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {authMode === 'Login' ? t.loginBtn : t.registerBtn}
+                <ArrowRight size={16} />
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4 animate-fade-in">
+              <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest text-center border-b border-slate-850 pb-2">
+                {language === 'Hindi' ? '🔑 पासवर्ड फॉरवर्ड / रीसेट' : '🔑 Forgot / Reset Password'}
+              </h3>
+
+              {!otpSent ? (
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                      <Smartphone size={13} /> {t.mobileNumber}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-semibold">+91</span>
+                      <input
+                        type="text"
+                        placeholder={t.enter10Digit}
+                        value={forgotMobile}
+                        onChange={(e) => setForgotMobile(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono tracking-wide"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {forgotError && (
+                    <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-lg text-xs text-red-400 text-center font-semibold animate-shake">
+                      {forgotError}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotError('');
+                      if (!/^\d{10}$/.test(forgotMobile)) {
+                        setForgotError(language === 'Hindi' ? 'कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile number.');
+                        return;
+                      }
+                      const matched = accounts.find((acc) => acc.mobile === forgotMobile);
+                      if (!matched) {
+                        setForgotError(language === 'Hindi' ? 'यह मोबाइल नंबर पंजीकृत नहीं है!' : 'This mobile number is not registered!');
+                        return;
+                      }
+
+                      const generatedOtp = String(Math.floor(1000 + Math.random() * 9000));
+                      setSentOtp(generatedOtp);
+                      setOtpSent(true);
+                      setForgotSuccess(language === 'Hindi' ? `ओटीपी सफलतापूर्वक भेजा गया! आपका टेस्ट ओटीपी है: ${generatedOtp}` : `OTP sent successfully! Your test OTP is: ${generatedOtp}`);
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{language === 'Hindi' ? 'ओटीपी भेजें / Send OTP' : 'Send OTP'}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {forgotSuccess && (
+                    <div className="p-3 bg-emerald-950/40 border border-emerald-800/50 rounded-lg text-xs text-emerald-400 text-center font-bold animate-pulse animate-fade-in">
+                      {forgotSuccess}
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                      <Lock size={13} /> {language === 'Hindi' ? 'ओटीपी दर्ज करें / Enter OTP' : 'Enter 4-Digit OTP'}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="XXXX"
+                      maxLength={4}
+                      value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono tracking-widest text-center text-lg font-bold"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-amber-500/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                      <Lock size={13} /> {language === 'Hindi' ? 'नया पासवर्ड / New Password' : 'New Secure Password'}
+                    </label>
+                    <input
+                      type="password"
+                      placeholder={language === 'Hindi' ? 'नया पासवर्ड दर्ज करें' : 'Enter new password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+
+                  {forgotError && (
+                    <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-lg text-xs text-red-400 text-center font-semibold animate-shake">
+                      {forgotError}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotError('');
+                      if (forgotOtp !== sentOtp) {
+                        setForgotError(language === 'Hindi' ? 'गलत ओटीपी! कृपया सही ओटीपी दर्ज करें।' : 'Incorrect OTP! Please try again.');
+                        return;
+                      }
+                      if (newPassword.length < 4) {
+                        setForgotError(language === 'Hindi' ? 'पासवर्ड कम से कम 4 अक्षरों का होना चाहिए।' : 'Password must be at least 4 characters.');
+                        return;
+                      }
+
+                      setAccounts((prev) => {
+                        const updated = prev.map((acc) => {
+                          if (acc.mobile === forgotMobile) {
+                            return { ...acc, password: newPassword };
+                          }
+                          return acc;
+                        });
+                        localStorage.setItem('ramu_accounts', JSON.stringify(updated));
+                        return updated;
+                      });
+
+                      setAuthMode('Login');
+                      setAuthError(language === 'Hindi' ? 'पासवर्ड सफलतापूर्वक बदल दिया गया! कृपया लॉगिन करें।' : 'Password reset successfully! Please login with your new password.');
+                      
+                      setForgotMobile('');
+                      setForgotOtp('');
+                      setSentOtp('');
+                      setNewPassword('');
+                      setOtpSent(false);
+                    }}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 py-3.5 px-4 rounded-xl font-extrabold text-sm uppercase tracking-wider hover:from-emerald-400 hover:to-teal-500 shadow-lg shadow-emerald-500/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{language === 'Hindi' ? 'पासवर्ड रीसेट करें' : 'Reset Password'}</span>
+                    <CheckCircle2 size={16} />
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('Login');
+                  setAuthError('');
+                  setForgotError('');
+                  setForgotSuccess('');
+                  setOtpSent(false);
+                }}
+                className="w-full text-center text-xs text-slate-400 hover:text-slate-200 underline font-semibold mt-2 block"
+              >
+                {language === 'Hindi' ? '← वापस लॉगिन पर जाएं' : '← Back to Login'}
+              </button>
+            </div>
+          )}
 
           {/* Quick instructions */}
           <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-850 text-center space-y-2 text-slate-500 text-[10px] leading-relaxed">
@@ -1256,7 +1444,7 @@ export default function App() {
                       {user.username}
                     </h3>
                     <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                      {t.uidPrefix} <strong className="text-amber-500 font-bold">{user.uid || 'N/A'}</strong> | Mobile: {user.mobile}
+                      {t.uidPrefix} <strong className="text-amber-500 font-bold">{user.uid || 'N/A'}</strong>
                     </p>
                   </div>
 

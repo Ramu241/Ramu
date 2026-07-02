@@ -108,11 +108,8 @@ export default function PromotionSection({ userMobile, userInviteCode, accounts,
                 <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex justify-between items-center text-xs">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 font-bold text-slate-200">
-                      <Smartphone size={12} className="text-slate-500" />
-                      <span>{formatMobile(refUser.mobile)}</span>
-                    </div>
-                    <div className="text-[10px] text-slate-500">
-                      UID: <span className="font-mono text-slate-400">{refUser.uid}</span>
+                      <span className="text-xs text-amber-500 font-bold">UID: {refUser.uid}</span>
+                      <span className="text-[11px] text-slate-400">({refUser.username})</span>
                     </div>
                   </div>
                   <div className="text-right space-y-0.5">
